@@ -1,7 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-VERSION="${NCDU_VERSION:-2.9.1}"
+DEFAULT_NCDU_VERSION="2.9.1"
+VERSION="${NCDU_VERSION:-${DEFAULT_NCDU_VERSION}}"
 bs_workspace="${BS_WORKSPACE:-${1:-}}"
 
 if [ -z "${bs_workspace}" ]; then
@@ -10,7 +11,17 @@ if [ -z "${bs_workspace}" ]; then
 fi
 
 cd "${bs_workspace:?}" || exit 1
-wget "https://dev.yorhel.nl/download/ncdu-${VERSION}.tar.gz"
+
+archive_url="https://dev.yorhel.nl/download/ncdu-${VERSION}.tar.gz"
+if ! wget --spider "${archive_url}" > /dev/null 2>&1; then
+  if [ "${VERSION}" != "${DEFAULT_NCDU_VERSION}" ]; then
+    echo "Requested NCDU_VERSION=${VERSION} not found, falling back to ${DEFAULT_NCDU_VERSION}" >&2
+    VERSION="${DEFAULT_NCDU_VERSION}"
+    archive_url="https://dev.yorhel.nl/download/ncdu-${VERSION}.tar.gz"
+  fi
+fi
+
+wget "${archive_url}"
 tar xvf "ncdu-${VERSION}.tar.gz"
 
 cd "ncdu-${VERSION:?}" || exit 1
