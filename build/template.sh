@@ -11,7 +11,7 @@ cd "ncdu-${VERSION:?}" || exit 1
 ./configure
 make
 
-strip *.exe
+strip -- ./*.exe
 ./ncdu --version
 groff -mandoc -Thtml < ncdu.1 > ncdu.html
 
