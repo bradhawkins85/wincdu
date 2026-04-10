@@ -1,0 +1,32 @@
+name: Build artifact
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  package:
+    name: Package distributable files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create package folder
+        run: |
+          mkdir -p dist/wincdu
+          cp README.md LICENSE wincdu-headless.py wincdu-headless.cmd dist/wincdu/
+
+      - name: Create zip archive
+        run: |
+          cd dist
+          zip -r wincdu-headless-${GITHUB_REF_NAME:-snapshot}.zip wincdu
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wincdu-headless-package
+          path: dist/*.zip
