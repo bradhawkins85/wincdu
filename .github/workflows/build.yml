@@ -18,7 +18,12 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget build-essential pkg-config libncursesw5-dev groff zig
+          sudo apt-get install -y wget build-essential pkg-config libncursesw5-dev groff
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v1
+        with:
+          version: 0.13.0
 
       - name: Build ncdu payload from template
         run: |
