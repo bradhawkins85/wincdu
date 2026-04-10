@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+
 VERSION="ncdu-version"
 bs_workspace="folder"
 
@@ -11,8 +13,16 @@ cd "ncdu-${VERSION:?}" || exit 1
 ./configure
 make
 
-strip -- ./*.exe
+if compgen -G "./*.exe" > /dev/null; then
+  strip -- ./*.exe
+  NCDU_BIN="ncdu.exe"
+else
+  strip -- ./ncdu
+  cp ./ncdu ./ncdu.exe
+  NCDU_BIN="ncdu.exe"
+fi
+
 ./ncdu --version
 groff -mandoc -Thtml < ncdu.1 > ncdu.html
 
-tar cvzf "../${bs_workspace}.tar.gz" ncdu.exe ncdu.html
+tar cvzf "../${bs_workspace}.tar.gz" "${NCDU_BIN}" ncdu.html
