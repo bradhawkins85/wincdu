@@ -45,20 +45,27 @@ import re
 p = Path("build.zig")
 s = p.read_text()
 pattern = re.compile(
-    r"\.root_module\s*=\s*b\.createModule\(\.\{\s*"
-    r"\.root_source_file\s*=\s*([^,]+),\s*"
-    r"\.target\s*=\s*([^,]+),\s*"
-    r"\.optimize\s*=\s*([^,]+),\s*"
-    r"\}\),",
+    r"\.root_module\s*=\s*b\.createModule\(\.\{(?P<body>.*?)\}\s*\)\s*,",
     re.S,
 )
-new, n = pattern.subn(
-    ".root_source_file = \\1,\n        .target = \\2,\n        .optimize = \\3,",
-    s,
-    count=1,
+m = pattern.search(s)
+if not m:
+    raise SystemExit("Unable to locate root_module assignment in build.zig")
+
+body = m.group("body")
+field_values = {}
+for field in ("root_source_file", "target", "optimize"):
+    field_match = re.search(rf"\.{field}\s*=\s*(.*?),\s*(?:\n|$)", body, re.S)
+    if not field_match:
+        raise SystemExit(f"Unable to locate .{field} inside root_module assignment")
+    field_values[field] = field_match.group(1).strip()
+
+replacement = (
+    f".root_source_file = {field_values['root_source_file']},\n"
+    f"        .target = {field_values['target']},\n"
+    f"        .optimize = {field_values['optimize']},"
 )
-if n == 0:
-    raise SystemExit("Unable to patch build.zig for Zig 0.13 compatibility")
+new = s[:m.start()] + replacement + s[m.end():]
 p.write_text(new)
 PY
       zig build -Doptimize=ReleaseSafe
