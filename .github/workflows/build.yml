@@ -6,9 +6,6 @@ on:
     tags:
       - 'v*'
 
-env:
-  NCDU_FALLBACK_VERSION: '2.9.1'
-
 jobs:
   package:
     name: Package distributable files
@@ -27,13 +24,11 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           if [ -z "${version}" ] || [ "${version}" = "${GITHUB_REF_NAME}" ]; then
-            version="${NCDU_FALLBACK_VERSION}"
+            version="2.9.1"
           fi
 
           workspace="$(mktemp -d)"
-          sed -e "s/ncdu-version/${version}/" -e "s|folder|${workspace}|" build/template.sh > /tmp/build-ncdu.sh
-          chmod +x /tmp/build-ncdu.sh
-          /tmp/build-ncdu.sh
+          NCDU_VERSION="${version}" BS_WORKSPACE="${workspace}" bash build/template.sh
 
           mkdir -p dist/wincdu
           tar xvf "${workspace}.tar.gz" -C dist/wincdu

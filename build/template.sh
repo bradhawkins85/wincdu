@@ -1,8 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
-VERSION="ncdu-version"
-bs_workspace="folder"
+VERSION="${NCDU_VERSION:-2.9.1}"
+bs_workspace="${BS_WORKSPACE:-${1:-}}"
+
+if [ -z "${bs_workspace}" ]; then
+  echo "BS_WORKSPACE (or first script arg) must be set" >&2
+  exit 1
+fi
 
 cd "${bs_workspace:?}" || exit 1
 wget "https://dev.yorhel.nl/download/ncdu-${VERSION}.tar.gz"
