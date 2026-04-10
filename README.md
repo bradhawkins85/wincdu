@@ -55,12 +55,49 @@ Each release includes:
 
 wincdu is tested successfully with local directories. You should test and verify that it works for your specific needs.
 
+
+## Headless HTML Report Mode
+
+You can generate a browsable standalone HTML report from a single command line invocation (no interactive UI required):
+
+```
+wincdu-headless.cmd c:\work c:\temp\wincdu-report.html
+```
+
+This command scans the target folder recursively and writes an HTML report with:
+- Directory/file hierarchy
+- Per-item size (human-readable)
+- Expand/collapse navigation
+- Client-side filter/search
+
+Optional flag:
+
+```
+wincdu-headless.cmd c:\work c:\temp\wincdu-report.html --follow-symlinks
+```
+
 ## Links
 
 - **Changelog**: https://changelogs.itefix.net/changelogs/wincdu
 - **Ncdu homepage**: https://dev.yorhel.nl/ncdu
 - **Mintty homepage**: https://mintty.github.io/
 - **Cygwin homepage**: http://www.cygwin.com/
+
+
+## CI/CD Pipelines
+
+This repository includes GitHub Actions workflows for automated verification and packaging:
+
+- **CI (`.github/workflows/ci.yml`)**
+  - Runs on pull requests and branch pushes
+  - Validates `wincdu-headless.py` syntax
+  - Generates a sample HTML report on Linux and Windows
+  - Lints shell scripts with ShellCheck
+
+- **Build artifact (`.github/workflows/build.yml`)**
+  - Runs on version tags (`v*`) and manual dispatch
+  - Packages distributable files into a ZIP archive
+  - Uploads the ZIP as a workflow artifact
 
 ## License
 
