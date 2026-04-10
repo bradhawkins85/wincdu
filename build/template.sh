@@ -35,7 +35,38 @@ elif [ -f "./build.zig" ]; then
     exit 1
   fi
 
-  zig build -Doptimize=ReleaseSafe
+  if ! zig build -Doptimize=ReleaseSafe 2> /tmp/zig-build.err; then
+    if grep -q "no field named 'root_module' in struct 'Build.ExecutableOptions'" /tmp/zig-build.err; then
+      echo "Detected Zig 0.13/0.12 API mismatch, patching build.zig for compatibility..." >&2
+      python3 - <<'PY'
+from pathlib import Path
+import re
+
+p = Path("build.zig")
+s = p.read_text()
+pattern = re.compile(
+    r"\.root_module\s*=\s*b\.createModule\(\.\{\s*"
+    r"\.root_source_file\s*=\s*([^,]+),\s*"
+    r"\.target\s*=\s*([^,]+),\s*"
+    r"\.optimize\s*=\s*([^,]+),\s*"
+    r"\}\),",
+    re.S,
+)
+new, n = pattern.subn(
+    ".root_source_file = \\1,\n        .target = \\2,\n        .optimize = \\3,",
+    s,
+    count=1,
+)
+if n == 0:
+    raise SystemExit("Unable to patch build.zig for Zig 0.13 compatibility")
+p.write_text(new)
+PY
+      zig build -Doptimize=ReleaseSafe
+    else
+      cat /tmp/zig-build.err >&2
+      exit 1
+    fi
+  fi
 
   if [ -f "./zig-out/bin/ncdu" ]; then
     cp ./zig-out/bin/ncdu ./ncdu
