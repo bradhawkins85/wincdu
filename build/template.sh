@@ -26,8 +26,27 @@ tar xvf "ncdu-${VERSION}.tar.gz"
 
 cd "ncdu-${VERSION:?}" || exit 1
 
-./configure
-make
+if [ -x "./configure" ]; then
+  ./configure
+  make
+elif [ -f "./build.zig" ]; then
+  if ! command -v zig > /dev/null 2>&1; then
+    echo "zig is required to build ncdu ${VERSION} (build.zig detected)" >&2
+    exit 1
+  fi
+
+  zig build -Doptimize=ReleaseSafe
+
+  if [ -f "./zig-out/bin/ncdu" ]; then
+    cp ./zig-out/bin/ncdu ./ncdu
+  else
+    echo "ncdu binary not found under zig-out/bin after zig build" >&2
+    exit 1
+  fi
+else
+  echo "No supported build system detected (missing configure and build.zig)" >&2
+  exit 1
+fi
 
 if compgen -G "./*.exe" > /dev/null; then
   strip -- ./*.exe

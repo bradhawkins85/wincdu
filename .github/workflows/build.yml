@@ -18,7 +18,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget build-essential pkg-config libncursesw5-dev groff
+          sudo apt-get install -y wget build-essential pkg-config libncursesw5-dev groff zig
 
       - name: Build ncdu payload from template
         run: |
