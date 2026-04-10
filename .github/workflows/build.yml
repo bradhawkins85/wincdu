@@ -15,18 +15,48 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget build-essential pkg-config libncursesw5-dev groff
+
+      - name: Build ncdu payload from template
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [ -z "${version}" ] || [ "${version}" = "${GITHUB_REF_NAME}" ]; then
+            version="2.9.1"
+          fi
+
+          workspace="$(mktemp -d)"
+          NCDU_VERSION="${version}" BS_WORKSPACE="${workspace}" bash build/template.sh
+
+          mkdir -p dist/wincdu
+          tar xvf "${workspace}.tar.gz" -C dist/wincdu
+
       - name: Create package folder
         run: |
           mkdir -p dist/wincdu
-          cp README.md LICENSE wincdu-headless.py wincdu-headless.cmd dist/wincdu/
+
+          rsync -av \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'dist/' \
+            ./ dist/wincdu/
+
+          test -f dist/wincdu/README.md
+          test -f dist/wincdu/LICENSE
+          test -f dist/wincdu/wincdu-headless.py
+          test -f dist/wincdu/wincdu-headless.cmd
+          test -f dist/wincdu/ncdu.exe
+          test -f dist/wincdu/ncdu.html
 
       - name: Create zip archive
         run: |
           cd dist
-          zip -r wincdu-headless-${GITHUB_REF_NAME:-snapshot}.zip wincdu
+          zip -r wincdu-${GITHUB_REF_NAME:-snapshot}.zip wincdu
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wincdu-headless-package
+          name: wincdu-package
           path: dist/*.zip
